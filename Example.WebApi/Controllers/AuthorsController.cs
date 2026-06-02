@@ -6,7 +6,7 @@ namespace Example.WebApi.Controllers
 
     [ApiController]
     [Route("[controller]")]
-    public class AuthorsController
+    public class AuthorsController: ControllerBase
     {
 
 
@@ -18,70 +18,106 @@ namespace Example.WebApi.Controllers
         };
 
         [HttpGet(Name = "GetAuthors")]
-        public IList<Author> Get()
+        public IActionResult Get(string firstName = "", string lastName = "", string bookTitle = "")
         {
-            return authors.ToArray();
+            IEnumerable<Author> query = authors;
+
+            
+            if (firstName != "")
+            {
+                query = authors.Where(a => a.FirstName == firstName);
+            }
+            if (lastName != "")
+            {
+                query = authors.Where(a => a.LastName == lastName);
+            }
+            if(bookTitle != "")
+            {
+                query = authors.Where(a => a.Books.Any(b => b.Title == bookTitle));
+            }
+            if (query != null)
+            {
+                return Ok(query.ToList());
+            }
+            return NotFound();
         }
 
         [HttpGet("{id}", Name = "GetAuthor")]
-        public Author Get(int id)
+        public IActionResult Get(int id)
         {
             Author author = authors.FirstOrDefault(a => a.Id == id);
             if(author != null)
             {
-                return author;
+                return Ok(author);
             }
-            return null;
+            return NotFound();
         }
 
         [HttpPost(Name = "AddAuthor")]
-        public bool Post([FromBody] Author author)
+        public IActionResult Post([FromBody] Author author)
         {
-            author.Id = authors.Max(a => a.Id) + 1;
+            
             if (author != null)
             {
+                author.Id = authors.Max(a => a.Id) + 1;
                 authors.Add(author);
-                return true;
+                return Ok();
             }
-            return false;
+            return BadRequest();
+            
         }
 
         [HttpDelete("{id}", Name = "DeleteAuthor")]
-        public bool Delete(int id)
+        public IActionResult Delete(int id)
         {
 
             Author author = authors.FirstOrDefault(a => a.Id == id);
             if (author != null)
             {
                 authors.Remove(author);
-                return true;
+                return Ok();
             }
-            return false;
+            return NotFound();
 
         }
 
         [HttpPost("AddAuthorFromQuery")]
-        public bool PostFromQuery([FromQuery] Author author)
+        public IActionResult PostFromQuery([FromQuery] Author author)
         {
             Author newAuthor = new Author { Id = authors.Max(a => a.Id) + 1, FirstName = author.FirstName, LastName = author.LastName, BirthDate = author.BirthDate };
             if (newAuthor != null)
             {
                 authors.Add(newAuthor);
-                return true;
+                return Ok();
             }
-            return false;
+            return BadRequest();
         }
 
         [HttpGet("GetFromQuery")]
-        public Author GetFromQuery([FromQuery] int id)
+        public IActionResult GetFromQuery([FromQuery] int id)
         {
 
-            return authors.FirstOrDefault(a => a.Id == id);
+            Author author = authors.FirstOrDefault(a => a.Id == id);
+            if (author != null)
+            {
+                return Ok(author);
+            }
+            return NotFound();
+        }
 
+        [HttpGet("GetFromBody")]
+        public IActionResult GetFromBody([FromBody] int id)
+        {
+            Author author = authors.FirstOrDefault(a => a.Id == id);
+            if (author != null)
+            {
+                return Ok(author);
+            }
+            return NotFound();
         }
 
         [HttpPost("{id}/AddBook")]
-        public bool AddBook(int id, [FromBody] Book book)
+        public IActionResult AddBook(int id, [FromBody] Book book)
         {
             Author author = authors.FirstOrDefault(a => a.Id == id);
             if (author != null)
@@ -94,10 +130,14 @@ namespace Example.WebApi.Controllers
                 if (book != null)
                 {
                     author.Books.Add(book);
-                    return true;
+                    return Ok();
+                }
+                else if (book == null)
+                {
+                    return BadRequest();
                 }
             }
-            return false;
+            return NotFound();
         }
 
 
