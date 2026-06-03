@@ -13,7 +13,8 @@
 
         public string ISBN { get; set; }
 
-        public IList<Author> Authors { get; set; }
+        public List<BookAuthor> BookAuthors { get; set; }
+
 
     }
 }
