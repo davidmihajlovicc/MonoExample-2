@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace Example.WebApi.Controllers
 {
@@ -15,42 +16,74 @@ namespace Example.WebApi.Controllers
             new Book { Id = 5, Title = "The Great Gatsby", ReleaseDate = DateOnly.FromDateTime(DateTime.Now.AddDays(4)), PageCount = 500, ISBN = "6677889900", Authors = new List<Author> { new Author{Id = 5, FirstName = "John", LastName = "Doe", BirthDate = DateOnly.FromDateTime(DateTime.Now.AddDays(2)) } } }
         };
 
+        string connectionString = "Host=localhost:5432;Database=postgres;Username=postgres;Password=postgre;";
+
 
         [HttpGet(Name = "GetBooks")]
-        public IActionResult Get([FromQuery] int id = 0, [FromQuery] string title = "", [FromQuery] string authorName = "", [FromQuery] string authorLastName = "")
+        public IActionResult Get([FromQuery] string ISBN = "", [FromQuery] string title = "", [FromQuery] string authorName = "", [FromQuery] string authorLastName = "")
         {
 
-            IEnumerable<Book> query = books;
+            var books = new List<Book>();
+            try
+            {
+                using var connection = new Npgsql.NpgsqlConnection(connectionString);
+                StringBuilder sqlCommand = new StringBuilder("SELECT b.\"Title\", b.\"ReleaseDate\", b.\"PageCount\", b.\"ISBN\", a.\"FirstName\", a.\"LastName\" " +
+                    "FROM \"Book\" b  " +
+                    "LEFT JOIN  \"BookAuthor\" ab on b.\"Id\" = ab.\"BookId\"" +
+                    "LEFT JOIN \"Author\" a on a.\"Id\" = ab.\"AuthorId\"" +
+                    "WHERE 1=1") ;
 
-            if (id != 0) {
-                query= books.Where(b => b.Id == id);
-            }
-            if (title != "")
-            {
-                query = books.Where(b => b.Title == title);
-            }
-            if (authorName != "") {
-                query = books.Where(b => b.Authors.Any(a => a.FirstName == authorName));
-            }
-            if(authorLastName != "") {
-                query = books.Where(b => b.Authors.Any(a => a.LastName == authorLastName));
-            }
-            if (query != null)
-            {
-                return Ok(query.ToList());
-            }
-            return NotFound();
-        }
+                using var command = new Npgsql.NpgsqlCommand();
 
-        [HttpGet("{id}", Name = "GetBook")]
-        public IActionResult Get(int id)
-        {
-            Book book = books.FirstOrDefault(b => b.Id == id);
-            if (book != null)
-            {
-                return Ok(book);
+                if (title != "")
+                {
+                    sqlCommand.Append(" AND b.\"Title\" = @Id");
+                    command.Parameters.AddWithValue("title", title);
+                }
+                if (ISBN != "")
+                {
+                    sqlCommand.Append(" AND b.\"ISBN\" = @ISBN");
+                    command.Parameters.AddWithValue("ISBN", ISBN);
+                }
+                if (authorName != "")
+                {
+                    sqlCommand.Append(" AND a.\"FirstName\" = @authorName");
+                    command.Parameters.AddWithValue("authorName", authorName);
+                }
+                if(authorLastName != "")
+                {
+                    sqlCommand.Append(" AND a.\"LastName\" = @authorName");
+                    command.Parameters.AddWithValue("lastName", authorLastName);
+                }
+
+                command.CommandText = sqlCommand.ToString();
+                command.Connection = connection;
+                
+
+                connection.Open();
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    Book book = new Book();
+                    book.Title = reader.IsDBNull(0) ? string.Empty : reader.GetFieldValue<string>(0);
+                    book.ReleaseDate = reader.IsDBNull (1) ? new DateOnly() : reader.GetFieldValue<DateOnly>(1);
+                    book.PageCount = reader.IsDBNull(2) ? 0 : reader.GetFieldValue<int>(2);
+                    book.ISBN = reader.IsDBNull(3) ? string.Empty : reader.GetFieldValue<string>(3);
+                    books.Add(book);
+                }
+
+                connection.Close();
+                if (books != null && books.Any())
+                {
+                    return Ok(books);
+                }
+                return NotFound();
+
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost(Name = "AddBook")]
