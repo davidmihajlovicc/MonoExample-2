@@ -89,70 +89,180 @@ namespace Example.WebApi.Controllers
         [HttpPost(Name = "AddBook")]
         public IActionResult Post([FromBody] Book book)
         {
-            book.Id = books.Max(b => b.Id) + 1;
-            if(book != null)
+            try
             {
-                books.Add(book);
-                return Ok();
+
+                int numberOfRowsAffected = 0;
+
+                numberOfRowsAffected = PostBook(book);
+                if (numberOfRowsAffected > 0)
+                {
+                    return Ok();
+                }
+                return BadRequest();
+
             }
-            return BadRequest();
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut("{id}", Name = "UpdateBook")]
         public IActionResult Put(int id, [FromBody] Book book) {
 
-            Book bookToUpdate = books.FirstOrDefault(b => b.Id == id);
-            if (book != null && bookToUpdate != null)
+
+            try
             {
-                bookToUpdate.ReleaseDate = book.ReleaseDate;
-                bookToUpdate.PageCount = book.PageCount;
-                bookToUpdate.ISBN = book.ISBN;
-                return Ok();
+
+                using var connection = new Npgsql.NpgsqlConnection(connectionString);
+                using var command = new Npgsql.NpgsqlCommand("UPDATE \"Book\" " +
+                    "SET \"Title\" = @title, \"ReleaseDate\" = @releaseDate, \"PageCount\" = @pageCount, \"ISBN\" = @ISBN" +
+                    " WHERE \"Id\" = @id", connection);
+
+                command.Parameters.AddWithValue("id", id);
+                command.Parameters.AddWithValue("title", book.Title);
+                command.Parameters.AddWithValue("releaseDate", book.ReleaseDate);
+                command.Parameters.AddWithValue("pageCount", book.PageCount);
+                command.Parameters.AddWithValue("ISBN", book.ISBN);
+
+                connection.Open();
+                command.ExecuteNonQuery();
+                connection.Close();
+
+                return Ok("Uspjesno");
+
+
             }
-            else if(bookToUpdate == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                return BadRequest(ex.Message);
             }
-            return BadRequest();
         }
 
         [HttpDelete("{id}", Name = "DeleteBook")]
         public IActionResult Delete(int id) {
 
-            Book book = books.FirstOrDefault(b => b.Id == id);
-            if (book != null)
+            try
             {
-                books.Remove(book);
+
+                using var connection = new Npgsql.NpgsqlConnection(connectionString);
+                using var command = new Npgsql.NpgsqlCommand("DELETE FROM \"Book\" WHERE \"Id\" = @id", connection);
+
+                command.Parameters.AddWithValue("id", id);
+
+                connection.Open();
+                int numberOfRows = command.ExecuteNonQuery();
+                if (numberOfRows == 0)
+                {
+                    return NotFound();
+                }
+                connection.Close();
                 return Ok();
 
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
 
         }
 
         [HttpPost("AddBookFromQuery")]
         public IActionResult PostFromQuery([FromQuery] Book book)
         {
-            Book newBook = new Book { Id = book.Id, ReleaseDate = book.ReleaseDate, PageCount = book.PageCount, ISBN = book.ISBN };
-            if(newBook != null)
+            try
             {
-                books.Add(newBook);
-                return Ok();
+
+                int numberOfRowsAffected = 0;
+
+                numberOfRowsAffected = PostBook(book);
+                if (numberOfRowsAffected > 0)
+                {
+                    return Ok();
+                }
+                return BadRequest();
+
             }
-            return BadRequest();
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("GetFromQuery")]
         public IActionResult GetFromQuery([FromQuery] int id) {
 
-            Book book = books.FirstOrDefault(b => b.Id == id);
-            if (book != null)
+            try
             {
-                return Ok(book);
+
+                Book book = GetBook(id);
+                if (book != null)
+                {
+                    return Ok(book);
+                }
+                return NotFound();
+
             }
-            return NotFound();
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
+
+        private Book GetBook(int id)
+        {
+
+
+            Book book = new Book();
+            using var connection = new Npgsql.NpgsqlConnection(connectionString);
+            using var command = new Npgsql.NpgsqlCommand("SELECT *" +
+                "FROM \"Book\" WHERE \"Id\" = @id", connection);
+
+            command.Parameters.AddWithValue("id", id);
+            connection.Open();
+            var reader = command.ExecuteReader();
+            reader.Read();
+            book.Id = reader.GetFieldValue<int>(0);
+            book.Title = reader.IsDBNull(1) ? string.Empty : reader.GetFieldValue<string>(1);
+            book.PageCount = reader.GetFieldValue<int>(3);
+            book.ReleaseDate = reader.IsDBNull(2) ? new DateOnly() : reader.GetFieldValue<DateOnly>(2);
+            book.ISBN = reader.IsDBNull(4) ? string.Empty : reader.GetFieldValue<string>(4);
+
+
+            connection.Close();
+
+            if (book != null)
+            {
+                return book;
+            }
+            return null;
+
+
+
+        }
+
+        private int PostBook(Book book)
+        {
+
+            using var connection = new Npgsql.NpgsqlConnection(connectionString);
+            using var command = new Npgsql.NpgsqlCommand("INSERT INTO \"Book\" (\"Title\", \"ReleaseDate\", \"PageCount\", \"ISBN\") " +
+                "VALUES (@title, @releaseDate, @pageCount, @ISBN)", connection);
+
+
+            command.Parameters.AddWithValue("title", book.Title);
+            command.Parameters.AddWithValue("releaseDate", book.ReleaseDate);
+            command.Parameters.AddWithValue("pageCount", book.PageCount);
+            command.Parameters.AddWithValue("ISBN", book.ISBN);
+
+
+            connection.Open();
+            int numberOfRowsAffected = command.ExecuteNonQuery();
+            connection.Close();
+
+            return numberOfRowsAffected;
+        }
 
     }
 }

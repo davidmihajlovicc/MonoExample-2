@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
 
@@ -15,12 +16,6 @@ namespace Example.WebApi.Controllers
 
         string connectionString = "Host=localhost:5432;Database=postgres;Username=postgres;Password=postgre;";
 
-        IList<Author> authors = new List<Author>()
-        {
-            new Author() { Id = 1, FirstName = "JK", LastName = "Rowling", BirthDate = new DateOnly(1965, 7, 31) },
-            new Author() { Id = 2, FirstName = "Steven", LastName = "King", BirthDate = new DateOnly(1947, 9, 21) },
-            new Author() { Id = 3, FirstName = "Jon", LastName = "Doe", BirthDate = new DateOnly(1980, 1, 1) },
-        };
 
         [HttpGet(Name = "GetAuthors")]
         public IActionResult Get(string firstName = "", string lastName = "", string bookTitle = "")
@@ -102,62 +97,26 @@ namespace Example.WebApi.Controllers
         [HttpPost(Name = "AddAuthor")]
         public IActionResult Post([FromBody] Author author)
         {
-            
-
-            try {
-                
-                using var connection = new Npgsql.NpgsqlConnection(connectionString);
-                using var command = new Npgsql.NpgsqlCommand("INSERT INTO \"Author\" (\"FirstName\", \"LastName\", \"BirthDate\") " +
-                    "VALUES (@firstName, @lastName, @birthDate)", connection);
-
-                
-                command.Parameters.AddWithValue("firstName", author.FirstName);
-                command.Parameters.AddWithValue("lastName", author.LastName);
-                command.Parameters.AddWithValue("birthDate", author.BirthDate);
-
-               /* nema smisla
-                connection.Open();
-                command.ExecuteNonQuery();
-                connection.Close();
-
-                connection.Open();
-                using var commandSelectId = new Npgsql.NpgsqlCommand("SELECT \"Id\" FROM \"Author\" " +
-                    "WHERE \"FirstName\" = @firstName AND \"LastName\" = @lastName AND  \"BirthDate\" = @birthDate", connection);
-                commandSelectId.Parameters.AddWithValue("firstName", author.FirstName);
-                commandSelectId.Parameters.AddWithValue("lastName", author.LastName);
-                commandSelectId.Parameters.AddWithValue("birthDate", author.BirthDate);
-                var reader = commandSelectId.ExecuteReader();
-
-                reader.Read();
-                author.Id = reader.GetFieldValue<int>(0);
-                connection.Close();
-                
 
 
-                using var commandSelectBookAuthor = new Npgsql.NpgsqlCommand("SELECT * FROM \"BookAuthor\" WHERE \"AuthorId\" = @id", connection);
-                commandSelectBookAuthor.Parameters.AddWithValue("id", author.Id);
-                connection.Open();
+            try
+            {
 
-                reader = commandSelectBookAuthor.ExecuteReader();
+                int numberOfRowsAffected = 0;
 
-                if (!reader.HasRows) {
-                    command.CommandText = "INSERT INTO \"BookAuthor\" (\"AuthorId\") VALUES (@id)";
-                    command.Parameters.AddWithValue("id", author.Id);
-                    connection.Close();
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                    connection.Close() ;
-                    
+                numberOfRowsAffected = PostAuthor(author);
+                if (numberOfRowsAffected > 0)
+                {
+                    return Ok();
                 }
-               */
-                
-                return Ok();
+                return BadRequest();
 
-
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return BadRequest(ex.Message);
             }
-            
+
         }
 
         [HttpPut("{id}", Name = "UpdateAuthor")]
@@ -231,21 +190,14 @@ namespace Example.WebApi.Controllers
             try
             {
 
-                using var connection = new Npgsql.NpgsqlConnection(connectionString);
-                using var command = new Npgsql.NpgsqlCommand("INSERT INTO \"Author\" (\"FirstName\", \"LastName\", \"BirthDate\") " +
-                    "VALUES (@firstName, @lastName, @birthDate)", connection);
+                int numberOfRowsAffected = 0;
 
-
-                command.Parameters.AddWithValue("firstName", author.FirstName);
-                command.Parameters.AddWithValue("lastName", author.LastName);
-                command.Parameters.AddWithValue("birthDate", author.BirthDate);
-
-                connection.Open();
-                command.ExecuteNonQuery();
-                connection.Close();
-
-                return Ok();
-
+                numberOfRowsAffected = PostAuthor(author);
+                if (numberOfRowsAffected >0)
+                {
+                    return Ok();
+                }
+                return BadRequest();
 
             }
             catch (Exception ex)
@@ -296,6 +248,60 @@ namespace Example.WebApi.Controllers
             }
         }
 
+
+        [HttpPost("AddBookToAuthor")]
+        public IActionResult AddBookToAuthor([FromBody] BookAuthor bookAuthor)
+        {
+
+            try
+            {
+                using var connection = new Npgsql.NpgsqlConnection(connectionString);
+                using var command = new Npgsql.NpgsqlCommand("SELECT * from \"BookAuthor\" WHERE \"AuthorId\" = @authorId AND \"BookId\" = @bookId", connection);
+
+
+                command.Parameters.AddWithValue("authorId", bookAuthor.AuthorId);
+                command.Parameters.AddWithValue("bookId", bookAuthor.BookId);
+
+
+                connection.Open();
+                var reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    connection.Close();
+                    return BadRequest("Already exists");
+                }
+                else
+                {
+                    connection.Close();
+                    using var commandInsert = new Npgsql.NpgsqlCommand("INSERT INTO \"BookAuthor\" (\"AuthorId\", \"BookId\") VALUES (@authorId, @bookId)", connection);
+
+
+                    commandInsert.Parameters.AddWithValue("authorId", bookAuthor.AuthorId);
+                    commandInsert.Parameters.AddWithValue("bookId", bookAuthor.BookId);
+
+
+                    connection.Open();
+                    int numberOfRowsAffected = commandInsert.ExecuteNonQuery();
+                    connection.Close();
+
+                    if (numberOfRowsAffected > 0)
+                    {
+                        return Ok();
+                    }
+                    return BadRequest();
+                }
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e.Message);
+
+            }
+
+
+        }
+
+
         private Author GetAuthor(int id)
         {
 
@@ -324,6 +330,25 @@ namespace Example.WebApi.Controllers
 
 
 
+        }
+
+        private int PostAuthor(Author author) {
+
+            using var connection = new Npgsql.NpgsqlConnection(connectionString);
+            using var command = new Npgsql.NpgsqlCommand("INSERT INTO \"Author\" (\"FirstName\", \"LastName\", \"BirthDate\") " +
+                "VALUES (@firstName, @lastName, @birthDate)", connection);
+
+
+            command.Parameters.AddWithValue("firstName", author.FirstName);
+            command.Parameters.AddWithValue("lastName", author.LastName);
+            command.Parameters.AddWithValue("birthDate", author.BirthDate);
+
+
+            connection.Open();
+            int numberOfRowsAffected = command.ExecuteNonQuery();
+            connection.Close();
+
+            return numberOfRowsAffected;
         }
 
     }
