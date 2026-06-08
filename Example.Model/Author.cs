@@ -9,7 +9,5 @@
 
         public List<BookAuthor> BookAuthors { get; set; } = [];
 
-        public List<Book> Books { get; set; } = [];
-
     }
 }

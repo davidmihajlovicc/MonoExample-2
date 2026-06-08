@@ -15,8 +15,6 @@
 
         public List<BookAuthor> BookAuthors { get; set; } = [];
 
-        public List<Author> Authors {get; set; } = [];
-
 
     }
 }
