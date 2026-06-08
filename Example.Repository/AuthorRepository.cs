@@ -48,9 +48,9 @@ namespace Example.Repository
                 command.CommandText = sqlCommand.ToString();
 
                 command.Connection = connection;
-                connection.Open();
+                await connection.OpenAsync();
                 var reader = await command.ExecuteReaderAsync();
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     Author author = new Author();
                     author.Id = reader.GetFieldValue<int>(0);
@@ -60,7 +60,7 @@ namespace Example.Repository
                     authors.Add(author);
                 }
 
-                connection.Close();
+                await connection.CloseAsync();
                 if (authors != null && authors.Any())
                 {
                     return authors;
@@ -90,9 +90,9 @@ namespace Example.Repository
                 command.Parameters.AddWithValue("lastName", author.LastName);
                 command.Parameters.AddWithValue("birthDate", author.BirthDate);
 
-                connection.Open();
+                await connection.OpenAsync();
                 int rowsAffected = await command.ExecuteNonQueryAsync();
-                connection.Close();
+                await connection.CloseAsync();
 
                 if (rowsAffected > 0)
                 {
@@ -124,13 +124,13 @@ namespace Example.Repository
 
                 command.Parameters.AddWithValue("id", id);
 
-                connection.Open();
+                await connection.OpenAsync();
                 int numberOfRows = await command.ExecuteNonQueryAsync();
                 if (numberOfRows == 0)
                 {
                     return false;
                 }
-                connection.Close();
+                await connection.CloseAsync();
                 return true;
 
             }
@@ -158,16 +158,16 @@ namespace Example.Repository
                 command.Parameters.AddWithValue("bookId", bookAuthor.BookId);
 
 
-                connection.Open();
+                await connection.OpenAsync();
                 var reader = await command.ExecuteReaderAsync();
                 if (reader.HasRows)
                 {
-                    connection.Close();
+                    await connection.CloseAsync();
                     return false;
                 }
                 else
                 {
-                    connection.Close();
+                    await connection.CloseAsync();
                     using var commandInsert = new Npgsql.NpgsqlCommand("INSERT INTO \"BookAuthor\" (\"AuthorId\", \"BookId\") VALUES (@authorId, @bookId)", connection);
 
 
@@ -175,9 +175,9 @@ namespace Example.Repository
                     commandInsert.Parameters.AddWithValue("bookId", bookAuthor.BookId);
 
 
-                    connection.Open();
+                    await connection.OpenAsync();
                     int numberOfRowsAffected = await commandInsert.ExecuteNonQueryAsync();
-                    connection.Close();
+                    await connection.CloseAsync();
 
                     if (numberOfRowsAffected > 0)
                     {
@@ -207,15 +207,15 @@ namespace Example.Repository
                 "FROM \"Author\" WHERE \"Id\" = @id", connection);
 
             command.Parameters.AddWithValue("id", id);
-            connection.Open();
+            await connection.OpenAsync();
             var reader = await command.ExecuteReaderAsync();
-            reader.Read();
+            await reader.ReadAsync();
             author.Id = reader.GetFieldValue<int>(0);
             author.FirstName = reader.IsDBNull(1) ? string.Empty : reader.GetFieldValue<string>(1);
             author.LastName = reader.IsDBNull(2) ? string.Empty : reader.GetFieldValue<string>(2);
             author.BirthDate = reader.IsDBNull(3) ? new DateOnly() : reader.GetFieldValue<DateOnly>(3);
 
-            connection.Close();
+            await connection.CloseAsync();
 
             if (author != null)
             {
@@ -240,9 +240,9 @@ namespace Example.Repository
             command.Parameters.AddWithValue("birthDate", author.BirthDate);
 
 
-            connection.Open();
+            await connection.OpenAsync();
             int numberOfRowsAffected = await command.ExecuteNonQueryAsync();
-            connection.Close();
+            await connection.CloseAsync();
 
             if (numberOfRowsAffected > 0) {
                 return true;

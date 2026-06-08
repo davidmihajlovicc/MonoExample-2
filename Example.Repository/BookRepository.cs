@@ -51,9 +51,9 @@ namespace Example.Repository
                 command.Connection = connection;
 
 
-                connection.Open();
+                await connection.OpenAsync();
                 var reader = await command.ExecuteReaderAsync();
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     Book book = new Book();
                     book.Title = reader.IsDBNull(0) ? string.Empty : reader.GetFieldValue<string>(0);
@@ -63,7 +63,7 @@ namespace Example.Repository
                     books.Add(book);
                 }
 
-                connection.Close();
+                await connection.CloseAsync();
                 if (books != null && books.Any())
                 {
                     return books;
@@ -98,9 +98,9 @@ namespace Example.Repository
                 command.Parameters.AddWithValue("pageCount", book.PageCount);
                 command.Parameters.AddWithValue("ISBN", book.ISBN);
 
-                connection.Open();
+                await connection.OpenAsync();
                 int rowsAffected  = await command.ExecuteNonQueryAsync();
-                connection.Close();
+                await connection.CloseAsync();
                 if (rowsAffected <= 0) {
                     return false;
                 }
@@ -126,9 +126,9 @@ namespace Example.Repository
 
                 command.Parameters.AddWithValue("id", id);
 
-                connection.Open();
+                await connection.OpenAsync();
                 int numberOfRows = await command.ExecuteNonQueryAsync();
-                connection.Close();
+                await connection.CloseAsync();
                 if (numberOfRows == 0)
                 {
                     return false;
@@ -157,16 +157,16 @@ namespace Example.Repository
                     "FROM \"Book\" WHERE \"Id\" = @id", connection);
 
                 command.Parameters.AddWithValue("id", id);
-                connection.Open();
+                await connection.OpenAsync();
                 var reader =  await command.ExecuteReaderAsync();
-                reader.Read();
+                await reader.ReadAsync();
                 book.Id = reader.GetFieldValue<int>(0);
                 book.Title = reader.IsDBNull(1) ? string.Empty : reader.GetFieldValue<string>(1);
                 book.PageCount = reader.GetFieldValue<int>(3);
                 book.ReleaseDate = reader.IsDBNull(2) ? new DateOnly() : reader.GetFieldValue<DateOnly>(2);
                 book.ISBN = reader.IsDBNull(4) ? string.Empty : reader.GetFieldValue<string>(4);
 
-                connection.Close();
+                await connection.CloseAsync();
 
                 if (book != null)
                 {
@@ -193,9 +193,9 @@ namespace Example.Repository
                 command.Parameters.AddWithValue("pageCount", book.PageCount);
                 command.Parameters.AddWithValue("ISBN", book.ISBN);
 
-                connection.Open();
+                await connection.OpenAsync();
                 int numberOfRowsAffected = await command.ExecuteNonQueryAsync();
-                connection.Close();
+                await connection.CloseAsync();
 
                 if (numberOfRowsAffected > 0) {
                     return true;
