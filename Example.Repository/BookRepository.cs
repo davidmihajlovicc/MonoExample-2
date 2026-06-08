@@ -101,7 +101,9 @@ namespace Example.Repository
                 connection.Open();
                 int rowsAffected  = await command.ExecuteNonQueryAsync();
                 connection.Close();
-
+                if (rowsAffected <= 0) {
+                    return false;
+                }
                 return true;
 
 
@@ -113,7 +115,7 @@ namespace Example.Repository
         }
 
 
-        public async Task<bool> Delete(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
 
             try
@@ -125,7 +127,7 @@ namespace Example.Repository
                 command.Parameters.AddWithValue("id", id);
 
                 connection.Open();
-                int numberOfRows = command.ExecuteNonQuery();
+                int numberOfRows = await command.ExecuteNonQueryAsync();
                 connection.Close();
                 if (numberOfRows == 0)
                 {
@@ -143,7 +145,7 @@ namespace Example.Repository
 
 
 
-        public async Task<Book?> GetBook(int id)
+        public async Task<Book?> GetBookAsync(int id)
         {
 
             try
@@ -156,7 +158,7 @@ namespace Example.Repository
 
                 command.Parameters.AddWithValue("id", id);
                 connection.Open();
-                var reader = command.ExecuteReader();
+                var reader =  await command.ExecuteReaderAsync();
                 reader.Read();
                 book.Id = reader.GetFieldValue<int>(0);
                 book.Title = reader.IsDBNull(1) ? string.Empty : reader.GetFieldValue<string>(1);
@@ -177,7 +179,7 @@ namespace Example.Repository
 
         }
 
-        public async Task<bool> PostBook(Book book)
+        public async Task<bool> PostBookAsync(Book book)
         {
             try
             {
@@ -192,7 +194,7 @@ namespace Example.Repository
                 command.Parameters.AddWithValue("ISBN", book.ISBN);
 
                 connection.Open();
-                int numberOfRowsAffected = command.ExecuteNonQuery();
+                int numberOfRowsAffected = await command.ExecuteNonQueryAsync();
                 connection.Close();
 
                 if (numberOfRowsAffected > 0) {

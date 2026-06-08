@@ -14,11 +14,11 @@ namespace Example.Repository.Common
 
         public Task<bool> PutAsync(int id, Book book);
 
-        public Task<bool> Delete(int id);
+        public Task<bool> DeleteAsync(int id);
 
-        public Task<Book?> GetBook(int id);
+        public Task<Book?> GetBookAsync(int id);
 
-        public Task<bool> PostBook(Book book);
+        public Task<bool> PostBookAsync(Book book);
 
 
     }

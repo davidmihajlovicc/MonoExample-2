@@ -176,7 +176,7 @@ namespace Example.Repository
 
 
                     connection.Open();
-                    int numberOfRowsAffected = commandInsert.ExecuteNonQuery();
+                    int numberOfRowsAffected = await commandInsert.ExecuteNonQueryAsync();
                     connection.Close();
 
                     if (numberOfRowsAffected > 0)

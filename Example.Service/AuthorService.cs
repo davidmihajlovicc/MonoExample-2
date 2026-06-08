@@ -12,45 +12,45 @@ namespace Example.Service
     public class AuthorService : IAuthorService
     {
 
-        public IList<Author>? Get(AuthorFilter filter) {
+        public async Task<IList<Author>?> GetAsync(AuthorFilter filter) {
 
             AuthorRepository authorRepository = new AuthorRepository();
-            return authorRepository.Get(filter);
+            return await authorRepository.GetAsync(filter);
         
         }
 
-        public Author? GetAuthor(int id) {
+        public async Task<Author?> GetAuthorAsync(int id) {
 
             AuthorRepository authorRepository = new AuthorRepository();
-            return authorRepository.GetAuthor(id);
+            return await authorRepository.GetAuthorAsync(id);
         
         }
 
-        public bool PostAuthor(Author author) {
+        public async Task<bool> PostAuthorAsync(Author author) {
 
             AuthorRepository authorRepository = new AuthorRepository();
-            return authorRepository.PostAuthor(author);
+            return await authorRepository.PostAuthorAsync(author);
 
         }
 
-        public bool Put(int id, Author author) {
+        public async Task<bool> PutAsync(int id, Author author) {
 
             AuthorRepository authorRepository = new AuthorRepository();
-            return authorRepository.Put(id, author);
+            return await authorRepository.PutAsync(id, author);
         
         }
 
-        public bool Delete(int id) {
+        public async Task<bool> DeleteAsync(int id) {
 
             AuthorRepository authorRepository = new AuthorRepository();
-            return authorRepository.Delete(id);
+            return await authorRepository.DeleteAsync(id);
         
         }
 
-        public bool AddBookToAuthor(BookAuthor bookAuthor) {
+        public async Task<bool> AddBookToAuthorAsync(BookAuthor bookAuthor) {
 
             AuthorRepository authorRepository = new AuthorRepository();
-            return authorRepository.AddBookToAuthor(bookAuthor);
+            return await authorRepository.AddBookToAuthorAsync(bookAuthor);
 
         }
 

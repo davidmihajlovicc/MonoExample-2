@@ -11,17 +11,17 @@ namespace Example.Service.Common
     public interface IAuthorService
     {
 
-        public IList<Author>? Get(AuthorFilter filter);
+        public Task<IList<Author>?> GetAsync(AuthorFilter filter);
 
-        public Author? GetAuthor(int id);
+        public Task<Author?> GetAuthorAsync(int id);
 
-        public bool PostAuthor(Author author);
+        public Task<bool> PostAuthorAsync(Author author);
 
-        public bool Put(int id, Author author);
+        public Task<bool> PutAsync(int id, Author author);
 
-        public bool Delete(int id);
+        public Task<bool> DeleteAsync(int id);
 
-        public bool AddBookToAuthor(BookAuthor bookAuthor);
+        public Task<bool> AddBookToAuthorAsync(BookAuthor bookAuthor);
 
 
     }

@@ -11,15 +11,15 @@ namespace Example.Service.Common
     public interface IBookService
     {
 
-        public IList<Book>? Get(BookFilter filter);
+        public Task<IList<Book>?> GetAsync(BookFilter filter);
 
-        public bool Put(int id, Book book);
+        public Task<bool> PutAsync(int id, Book book);
 
-        public bool Delete(int id);
+        public Task<bool> DeleteAsync(int id);
 
-        public Book? GetBook(int id);
+        public Task<Book?> GetBookAsync(int id);
 
-        public bool PostBook(Book book);
+        public Task<bool> PostBookAsync(Book book);
 
     }
 }

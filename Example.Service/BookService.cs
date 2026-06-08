@@ -13,40 +13,39 @@ namespace Example.Service
     public class BookService : IBookService
     {
 
-        
 
-        public IList<Book>? Get(BookFilter filter) {
+        public async Task<IList<Book>?> GetAsync(BookFilter filter) {
 
             BookRepository bookRepository = new BookRepository();
-            return bookRepository.Get(filter);
+            return await bookRepository.GetAsync(filter);
 
         }
 
-        public bool Put(int id, Book book) {
+        public async Task<bool> PutAsync(int id, Book book) {
 
             BookRepository bookRepository = new BookRepository();
-            return bookRepository.Put(id, book);
+            return await bookRepository.PutAsync(id, book);
 
         }
 
-        public bool Delete(int id) {
+        public async Task<bool> DeleteAsync(int id) {
 
             BookRepository bookRepository = new BookRepository();
-            return bookRepository.Delete(id);
+            return await bookRepository.DeleteAsync(id);
 
         }
 
-        public Book? GetBook(int id) {
+        public async Task<Book?> GetBookAsync(int id) {
 
             BookRepository bookRepository = new BookRepository();
-            return bookRepository.GetBook(id);
+            return await bookRepository.GetBookAsync(id);
             
         }
 
-        public bool PostBook(Book book) {
+        public async Task<bool> PostBookAsync(Book book) {
 
             BookRepository bookRepository = new BookRepository();
-            return bookRepository.PostBook(book);
+            return await bookRepository.PostBookAsync(book);
         
         }
 
