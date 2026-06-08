@@ -1,55 +1,55 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Threading.Tasks;
+using Example.Model;
+using Example.Repository.Common;
 
-
-
-namespace Example.WebApi.Controllers
+namespace Example.Repository
 {
-
-
-    [ApiController]
-    [Route("[controller]")]
-    public class AuthorsController: ControllerBase
+    public class AuthorRepository : IAuthorRepository
     {
-
 
         string connectionString = "Host=localhost:5432;Database=postgres;Username=postgres;Password=postgre;";
 
 
-        [HttpGet(Name = "GetAuthors")]
-        public IActionResult Get(string firstName = "", string lastName = "", string bookTitle = "")
+        
+        public async Task<IList<Author>?> GetAsync(AuthorFilter filter)
         {
 
             var authors = new List<Author>();
-            try { 
+            try
+            {
                 using var connection = new Npgsql.NpgsqlConnection(connectionString);
                 StringBuilder sqlCommand = new StringBuilder("SELECT \"Id\", \"FirstName\", \"LastName\", \"BirthDate\" FROM \"Author\" WHERE 1=1");
 
                 using var command = new Npgsql.NpgsqlCommand();
-                if (firstName != "")
+                if (filter.FirstName != "")
                 {
                     sqlCommand.Append(" AND \"FirstName\" = @firstName");
-                    command.Parameters.AddWithValue("firstName", firstName);
+                    command.Parameters.AddWithValue("firstName", filter.FirstName);
                 }
-                if (lastName != "")
+                if (filter.LastName != "")
                 {
                     sqlCommand.Append(" AND \"LastName\" = @lastName");
-                    command.Parameters.AddWithValue("lastName", lastName);
+                    command.Parameters.AddWithValue("lastName", filter.LastName);
                 }
-                if (bookTitle != "")
+                if (filter.BookTitle != "")
                 {
                     sqlCommand.Append(" AND \"BookTitle\" = @bookTitle");
-                    command.Parameters.AddWithValue("bookTitle", bookTitle);
+                    command.Parameters.AddWithValue("bookTitle", filter.BookTitle);
                 }
 
-                
-              
+
+
                 command.CommandText = sqlCommand.ToString();
 
                 command.Connection = connection;
                 connection.Open();
-                var reader = command.ExecuteReader();
+                var reader = await command.ExecuteReaderAsync();
                 while (reader.Read())
                 {
                     Author author = new Author();
@@ -61,67 +61,22 @@ namespace Example.WebApi.Controllers
                 }
 
                 connection.Close();
-                if(authors!= null && authors.Any())
+                if (authors != null && authors.Any())
                 {
-                    return Ok(authors);
+                    return authors;
                 }
-                return NotFound();
+                return null;
 
-            } catch (Exception ex) { 
-                return BadRequest(ex.Message); 
+            }
+            catch (Exception)
+            {
+                return null;
             }
 
         }
-
-
-        [HttpGet("{id}", Name = "GetAuthor")]
-        public IActionResult Get(int id)
+        public async Task<bool> PutAsync(int id, Author author)
         {
 
-            try {
-
-                Author author = GetAuthor(id);
-                if (author != null) {
-                    return Ok(author);
-                }
-                return NotFound();
-            
-            } catch (Exception e) {
-                return BadRequest(e.Message);
-            }
-           
-        }
-
-
-
-        [HttpPost(Name = "AddAuthor")]
-        public IActionResult Post([FromBody] Author author)
-        {
-
-
-            try
-            {
-
-                int numberOfRowsAffected = 0;
-
-                numberOfRowsAffected = PostAuthor(author);
-                if (numberOfRowsAffected > 0)
-                {
-                    return Ok();
-                }
-                return BadRequest();
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-        }
-
-        [HttpPut("{id}", Name = "UpdateAuthor")]
-        public IActionResult Put(int id, Author author) {
-            
             try
             {
 
@@ -136,121 +91,61 @@ namespace Example.WebApi.Controllers
                 command.Parameters.AddWithValue("birthDate", author.BirthDate);
 
                 connection.Open();
-                command.ExecuteNonQuery();
+                int rowsAffected = await command.ExecuteNonQueryAsync();
                 connection.Close();
 
-                return Ok("Uspjesno");
+                if (rowsAffected > 0)
+                {
+                    return true;
+                }
+                else { return false; }
 
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return false;
             }
 
 
         }
 
 
-        [HttpDelete("{id}", Name = "DeleteAuthor")]
-        public IActionResult Delete(int id)
+
+        public async Task<bool> DeleteAsync(int id)
         {
 
 
-            try {
-                
+            try
+            {
+
                 using var connection = new Npgsql.NpgsqlConnection(connectionString);
                 using var command = new Npgsql.NpgsqlCommand("DELETE FROM \"Author\" WHERE \"Id\" = @id", connection);
 
                 command.Parameters.AddWithValue("id", id);
 
                 connection.Open();
-                int numberOfRows = command.ExecuteNonQuery();
+                int numberOfRows = await command.ExecuteNonQueryAsync();
                 if (numberOfRows == 0)
                 {
-                    return NotFound();
+                    return false;
                 }
                 connection.Close();
-                return Ok();
-
-            }
-            catch (Exception ex) { 
-                return BadRequest(ex.Message); 
-            }
-
-          
-
-        }
-
-        [HttpPost("AddAuthorFromQuery")]
-        public IActionResult PostFromQuery([FromQuery] Author author)
-        {
-
-
-            try
-            {
-
-                int numberOfRowsAffected = 0;
-
-                numberOfRowsAffected = PostAuthor(author);
-                if (numberOfRowsAffected >0)
-                {
-                    return Ok();
-                }
-                return BadRequest();
+                return true;
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return false;
             }
-            
-        }
 
-        [HttpGet("GetFromQuery")]
-        public IActionResult GetFromQuery([FromQuery] int id)
-        {
 
-            try
-            {
 
-                Author author = GetAuthor(id);
-                if (author != null)
-                {
-                    return Ok(author);
-                }
-                return NotFound();
-
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        [HttpGet("GetFromBody")]
-        public IActionResult GetFromBody([FromBody] int id)
-        {
-            try
-            {
-
-                Author author = GetAuthor(id);
-                if (author != null)
-                {
-                    return Ok(author);
-                }
-                return NotFound();
-
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
 
-        [HttpPost("AddBookToAuthor")]
-        public IActionResult AddBookToAuthor([FromBody] BookAuthor bookAuthor)
+
+        public async Task<bool> AddBookToAuthorAsync(BookAuthor bookAuthor)
         {
 
             try
@@ -264,11 +159,11 @@ namespace Example.WebApi.Controllers
 
 
                 connection.Open();
-                var reader = command.ExecuteReader();
+                var reader = await command.ExecuteReaderAsync();
                 if (reader.HasRows)
                 {
                     connection.Close();
-                    return BadRequest("Already exists");
+                    return false;
                 }
                 else
                 {
@@ -286,15 +181,15 @@ namespace Example.WebApi.Controllers
 
                     if (numberOfRowsAffected > 0)
                     {
-                        return Ok();
+                        return true;
                     }
-                    return BadRequest();
+                    return false;
                 }
             }
             catch (Exception e)
             {
 
-                return BadRequest(e.Message);
+                return false;
 
             }
 
@@ -302,7 +197,7 @@ namespace Example.WebApi.Controllers
         }
 
 
-        private Author GetAuthor(int id)
+        public async Task<Author?> GetAuthorAsync(int id)
         {
 
 
@@ -313,7 +208,7 @@ namespace Example.WebApi.Controllers
 
             command.Parameters.AddWithValue("id", id);
             connection.Open();
-            var reader = command.ExecuteReader();
+            var reader = await command.ExecuteReaderAsync();
             reader.Read();
             author.Id = reader.GetFieldValue<int>(0);
             author.FirstName = reader.IsDBNull(1) ? string.Empty : reader.GetFieldValue<string>(1);
@@ -332,7 +227,8 @@ namespace Example.WebApi.Controllers
 
         }
 
-        private int PostAuthor(Author author) {
+        public async Task<bool> PostAuthorAsync(Author author)
+        {
 
             using var connection = new Npgsql.NpgsqlConnection(connectionString);
             using var command = new Npgsql.NpgsqlCommand("INSERT INTO \"Author\" (\"FirstName\", \"LastName\", \"BirthDate\") " +
@@ -345,11 +241,13 @@ namespace Example.WebApi.Controllers
 
 
             connection.Open();
-            int numberOfRowsAffected = command.ExecuteNonQuery();
+            int numberOfRowsAffected = await command.ExecuteNonQueryAsync();
             connection.Close();
 
-            return numberOfRowsAffected;
+            if (numberOfRowsAffected > 0) {
+                return true;
+            }
+            return false;
         }
-
     }
 }
