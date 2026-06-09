@@ -60,6 +60,8 @@ namespace Example.Repository
                     authors.Add(author);
                 }
 
+
+
                 await connection.CloseAsync();
                 if (authors != null && authors.Any())
                 {

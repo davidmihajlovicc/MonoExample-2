@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using Example.Service.Common;
 using static System.Net.WebRequestMethods;
+using AutoMapper;
 
 
 
@@ -20,9 +21,10 @@ namespace Example.WebApi.Controllers
 
         private IAuthorService authorService;
 
-
-        public AuthorController(IAuthorService authorService) { 
+        private IMapper _mapper;
+        public AuthorController(IAuthorService authorService, IMapper mapper) { 
             this.authorService = authorService;
+            _mapper = mapper;
         }
 
 
@@ -34,7 +36,7 @@ namespace Example.WebApi.Controllers
             IList<Author>? authors = await authorService.GetAsync(filter);
             if (authors != null)
             {
-                return Ok(authors);
+                return Ok(_mapper.Map<IList<GetAuthorDto>>(authors));
             }
             return BadRequest();
 
@@ -48,7 +50,7 @@ namespace Example.WebApi.Controllers
             Author? author = await authorService.GetAuthorAsync(id);
             if (author != null)
             {
-                return Ok(author);
+                return Ok(_mapper.Map<GetAuthorDto>(author));
             }
             return BadRequest();
 
@@ -57,10 +59,10 @@ namespace Example.WebApi.Controllers
 
 
         [HttpPost(Name = "AddAuthor")]
-        public async Task<IActionResult> PostAsync([FromBody] Author author)
+        public async Task<IActionResult> PostAsync([FromBody] AddAuthorDto author)
         {
 
-            if (await authorService.PostAuthorAsync(author) != false)
+            if (await authorService.PostAuthorAsync(_mapper.Map<Author>(author)) != false)
             {
                 return Ok();
             }
@@ -96,11 +98,11 @@ namespace Example.WebApi.Controllers
         }
 
         [HttpPost("AddAuthorFromQuery")]
-        public async Task<IActionResult> PostFromQueryAsync([FromQuery] Author author)
+        public async Task<IActionResult> PostFromQueryAsync([FromQuery] AddAuthorDto author)
         {
 
             
-            if (await authorService.PostAuthorAsync(author) != false)
+            if (await authorService.PostAuthorAsync(_mapper.Map<Author>(author)) != false)
             {
                 return Ok();
             }
@@ -116,7 +118,7 @@ namespace Example.WebApi.Controllers
             Author? author = await authorService.GetAuthorAsync(id);
             if (author != null)
             {
-                return Ok(author);
+                return Ok(_mapper.Map<GetAuthorDto>(author));
             }
             return BadRequest();
         }
@@ -129,7 +131,7 @@ namespace Example.WebApi.Controllers
             Author? author = await authorService.GetAuthorAsync(id);
             if (author != null)
             {
-                return Ok(author);
+                return Ok(_mapper.Map<GetAuthorDto>(author));
             }
             return BadRequest();
         }

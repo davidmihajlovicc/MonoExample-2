@@ -5,13 +5,19 @@ using Example.Service;
 using Example.Service.Common;
 using Autofac;
 using System.Reflection;
+using Example.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Services.AddControllers();
+builder.Services.AddAutoMapper(
+    cfg => { },
+    typeof(BookProfile),
+    typeof(AuthorProfile)
+);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

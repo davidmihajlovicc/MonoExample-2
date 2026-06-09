@@ -4,6 +4,7 @@ using Example.Model;
 using Example.Service;
 using Example.Common;
 using Example.Service.Common;
+using AutoMapper;
 
 namespace Example.WebApi.Controllers
 {
@@ -14,8 +15,11 @@ namespace Example.WebApi.Controllers
     {
 
         private IBookService bookService;
-        public BookController(IBookService bookService) {
+
+        public IMapper _mapper;
+        public BookController(IBookService bookService, IMapper mapper) {
             this.bookService = bookService;
+            _mapper = mapper;
         }
 
         [HttpGet(Name = "GetBooks")]
@@ -25,7 +29,7 @@ namespace Example.WebApi.Controllers
             BookFilter filter = new BookFilter { Title = title, ISBN = ISBN, AuthorName = authorName, AuthorLastName = authorLastName };
             IList<Book>? books = await bookService.GetAsync(filter);
             if (books != null) {
-                return Ok(books);
+                return Ok(_mapper.Map<List<GetBookDto>>(books));
             }
             return BadRequest();
 
@@ -33,9 +37,9 @@ namespace Example.WebApi.Controllers
         }
 
         [HttpPost(Name = "AddBook")]
-        public async Task<IActionResult> PostAsync([FromBody] Book book)
+        public async Task<IActionResult> PostAsync([FromBody] AddBookDto book)
         {
-            bool postBook = await bookService.PostBookAsync(book);
+            bool postBook = await bookService.PostBookAsync(_mapper.Map<Book>(book));
             if (postBook) {
                 return Ok();
             }
@@ -67,10 +71,10 @@ namespace Example.WebApi.Controllers
         }
 
         [HttpPost("AddBookFromQuery")]
-        public async Task<IActionResult> PostFromQueryAsync([FromQuery] Book book)
+        public async Task<IActionResult> PostFromQueryAsync([FromQuery] AddBookDto book)
         {
 
-            bool postBook = await bookService.PostBookAsync(book);
+            bool postBook = await bookService.PostBookAsync(_mapper.Map<Book>(book));
             if (postBook)
             {
                 return Ok();
@@ -84,7 +88,7 @@ namespace Example.WebApi.Controllers
             Book? book = await bookService.GetBookAsync(id);
             if (book != null)
             {
-                return Ok(book);
+                return Ok(_mapper.Map<GetBookDto>(book));
             }
             return BadRequest();
         }
