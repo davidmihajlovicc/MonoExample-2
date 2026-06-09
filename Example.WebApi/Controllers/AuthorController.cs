@@ -1,10 +1,10 @@
 ﻿using Example.Common;
 using Example.Model;
-using Example.Repository;
 using Example.Service;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
+using Example.Service.Common;
 using static System.Net.WebRequestMethods;
 
 
@@ -18,14 +18,20 @@ namespace Example.WebApi.Controllers
     public class AuthorController: ControllerBase
     {
 
+        private IAuthorService authorService;
+
+
+        public AuthorController(IAuthorService authorService) { 
+            this.authorService = authorService;
+        }
+
 
         [HttpGet(Name = "GetAuthors")]
         public async Task<IActionResult> GetAsync(string firstName = "", string lastName = "", string bookTitle= "")
         {
 
             AuthorFilter filter = new AuthorFilter { FirstName = firstName, LastName = lastName, BookTitle = bookTitle };
-            AuthorRepository authorRepository = new AuthorRepository();
-            IList<Author>? authors = await authorRepository.GetAsync(filter);
+            IList<Author>? authors = await authorService.GetAsync(filter);
             if (authors != null)
             {
                 return Ok(authors);
@@ -39,8 +45,7 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> GetAsync(int id)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            Author? author = await authorRepository.GetAuthorAsync(id);
+            Author? author = await authorService.GetAuthorAsync(id);
             if (author != null)
             {
                 return Ok(author);
@@ -55,8 +60,7 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> PostAsync([FromBody] Author author)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            if (await authorRepository.PostAuthorAsync(author) != false)
+            if (await authorService.PostAuthorAsync(author) != false)
             {
                 return Ok();
             }
@@ -68,8 +72,8 @@ namespace Example.WebApi.Controllers
         [HttpPut("{id}", Name = "UpdateAuthor")]
         public async Task<IActionResult> PutAsync(int id, Author author) {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            if (await authorRepository.PutAsync(id, author) != false)
+          
+            if (await authorService.PutAsync(id, author) != false)
             {
                 return Ok();
             }
@@ -82,8 +86,8 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> DeleteAsync(int id)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            if (await authorRepository.DeleteAsync(id) != false)
+            
+            if (await authorService.DeleteAsync(id) != false)
             {
                 return Ok();
             }
@@ -95,8 +99,8 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> PostFromQueryAsync([FromQuery] Author author)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            if (await authorRepository.PostAuthorAsync(author) != false)
+            
+            if (await authorService.PostAuthorAsync(author) != false)
             {
                 return Ok();
             }
@@ -108,8 +112,8 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> GetFromQueryAsync([FromQuery] int id)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            Author? author = await authorRepository.GetAuthorAsync(id);
+            
+            Author? author = await authorService.GetAuthorAsync(id);
             if (author != null)
             {
                 return Ok(author);
@@ -121,8 +125,8 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> GetFromBodyAsync([FromBody] int id)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            Author? author = await authorRepository.GetAuthorAsync(id);
+            
+            Author? author = await authorService.GetAuthorAsync(id);
             if (author != null)
             {
                 return Ok(author);
@@ -135,8 +139,8 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> AddBookToAuthorAsync([FromBody] BookAuthor bookAuthor)
         {
 
-            AuthorRepository authorRepository = new AuthorRepository();
-            if (await authorRepository.AddBookToAuthorAsync(bookAuthor) != false)
+            
+            if (await authorService.AddBookToAuthorAsync(bookAuthor) != false)
             {
                 return Ok();
             }

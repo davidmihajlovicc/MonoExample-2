@@ -3,6 +3,7 @@ using System.Text;
 using Example.Model;
 using Example.Service;
 using Example.Common;
+using Example.Service.Common;
 
 namespace Example.WebApi.Controllers
 {
@@ -12,14 +13,16 @@ namespace Example.WebApi.Controllers
     public class BookController : ControllerBase
     {
 
-        
+        private IBookService bookService;
+        public BookController(IBookService bookService) {
+            this.bookService = bookService;
+        }
 
         [HttpGet(Name = "GetBooks")]
         public async Task<IActionResult> GetAsync(string title = "", string ISBN = "", string authorName = "", string authorLastName = "")
         {
 
             BookFilter filter = new BookFilter { Title = title, ISBN = ISBN, AuthorName = authorName, AuthorLastName = authorLastName };
-            BookService bookService = new BookService();
             IList<Book>? books = await bookService.GetAsync(filter);
             if (books != null) {
                 return Ok(books);
@@ -32,7 +35,6 @@ namespace Example.WebApi.Controllers
         [HttpPost(Name = "AddBook")]
         public async Task<IActionResult> PostAsync([FromBody] Book book)
         {
-            BookService bookService = new BookService();
             bool postBook = await bookService.PostBookAsync(book);
             if (postBook) {
                 return Ok();
@@ -44,7 +46,6 @@ namespace Example.WebApi.Controllers
         [HttpPut("{id}", Name = "UpdateBook")]
         public async Task<IActionResult> PutAsync(int id, [FromBody] Book book) {
 
-            BookService bookService = new BookService();
             bool putBook = await bookService.PutAsync(id, book);
             if (putBook)
             {
@@ -56,7 +57,6 @@ namespace Example.WebApi.Controllers
         [HttpDelete("{id}", Name = "DeleteBook")]
         public async Task<IActionResult> DeleteAsync(int id) {
 
-            BookService bookService = new BookService();
             bool deleteBook = await bookService.DeleteAsync(id);
             if (deleteBook)
             {
@@ -70,7 +70,6 @@ namespace Example.WebApi.Controllers
         public async Task<IActionResult> PostFromQueryAsync([FromQuery] Book book)
         {
 
-            BookService bookService = new BookService();
             bool postBook = await bookService.PostBookAsync(book);
             if (postBook)
             {
@@ -82,7 +81,6 @@ namespace Example.WebApi.Controllers
         [HttpGet("GetFromQuery")]
         public async  Task<IActionResult> GetFromQueryAsync([FromQuery] int id) {
 
-            BookService bookService = new BookService();
             Book? book = await bookService.GetBookAsync(id);
             if (book != null)
             {
