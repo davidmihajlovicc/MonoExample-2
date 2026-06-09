@@ -4,6 +4,7 @@ using Example.Repository.Common;
 using Example.Service;
 using Example.Service.Common;
 using Autofac;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +16,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+/*builder.Services.AddTransient<IAuthorService, AuthorService >();
+builder.Services.AddTransient<IBookService, BookService >();
+builder.Services.AddTransient<IAuthorRepository,AuthorRepository >();
+builder.Services.AddTransient<IBookRepository,BookRepository >();*/
+
+
 
 builder.Host.ConfigureContainer<ContainerBuilder>(container =>
 {
+    
     container.RegisterType<AuthorService>().As<IAuthorService>().InstancePerDependency();
     container.RegisterType<BookService>().As<IBookService>().InstancePerDependency();
     container.RegisterType<AuthorRepository>().As<IAuthorRepository>().InstancePerDependency();
