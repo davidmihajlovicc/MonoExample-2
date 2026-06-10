@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Example.Model;
 using Example.Common;
+using Example.Model.Domain;
 
 namespace Example.Service.Common
 {

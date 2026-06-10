@@ -7,6 +7,8 @@ using System.Text;
 using Example.Service.Common;
 using static System.Net.WebRequestMethods;
 using AutoMapper;
+using Example.Model.DTO;
+using Example.Model.Domain;
 
 
 

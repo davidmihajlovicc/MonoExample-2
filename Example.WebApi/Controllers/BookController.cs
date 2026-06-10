@@ -5,6 +5,8 @@ using Example.Service;
 using Example.Common;
 using Example.Service.Common;
 using AutoMapper;
+using Example.Model.DTO;
+using Example.Model.Domain;
 
 namespace Example.WebApi.Controllers
 {

@@ -5,7 +5,7 @@ using Example.Service;
 using Example.Service.Common;
 using Autofac;
 using System.Reflection;
-using Example.Model;
+using Example.Model.MapperProfiles;
 
 var builder = WebApplication.CreateBuilder(args);
 

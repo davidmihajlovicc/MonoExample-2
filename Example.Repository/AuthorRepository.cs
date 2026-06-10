@@ -6,6 +6,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using Example.Model;
+using Example.Model.Domain;
 using Example.Repository.Common;
 
 namespace Example.Repository

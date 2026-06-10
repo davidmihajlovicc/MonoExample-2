@@ -8,6 +8,7 @@ using Example.Repository;
 using Example.Repository.Common;
 using Example.Service.Common;
 using Example.Common;
+using Example.Model.Domain;
 
 namespace Example.Service
 {

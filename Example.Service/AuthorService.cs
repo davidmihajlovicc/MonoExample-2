@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Example.Model;
+using Example.Model.Domain;
 using Example.Repository.Common;
 using Example.Service.Common;
 

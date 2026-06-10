@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Example.Model.Domain;
+using Example.Model.DTO;
 
-namespace Example.Model
+namespace Example.Model.MapperProfiles
 {
     public class BookProfile : Profile
     {

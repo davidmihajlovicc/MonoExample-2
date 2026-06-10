@@ -1,4 +1,4 @@
-﻿namespace Example.Model
+﻿namespace Example.Model.Domain
 {
     public class Book
     {

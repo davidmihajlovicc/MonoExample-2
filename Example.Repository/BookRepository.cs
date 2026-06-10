@@ -3,6 +3,7 @@ using System.Text;
 using Example.Model;
 using Example.Repository.Common;
 using Example.Common;
+using Example.Model.Domain;
 
 namespace Example.Repository
 {
